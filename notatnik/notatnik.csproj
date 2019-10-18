@@ -61,6 +61,8 @@
     <Compile Include="MainActivity.cs" />
     <Compile Include="moduls\Encrypter.cs" />
     <Compile Include="moduls\IEncrypter.cs" />
+    <Compile Include="moduls\IStringCipher.cs" />
+    <Compile Include="moduls\StringCipher.cs" />
     <Compile Include="Resources\Resource.designer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

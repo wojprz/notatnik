@@ -2534,8 +2534,11 @@ namespace notatnik
 			// aapt resource value: 0x7f09008c
 			public const int button1 = 2131296396;
 			
+			// aapt resource value: 0x7f09008f
+			public const int button2 = 2131296399;
+			
 			// aapt resource value: 0x7f09008e
-			public const int button2 = 2131296398;
+			public const int button3 = 2131296398;
 			
 			// aapt resource value: 0x7f090063
 			public const int buttonPanel = 2131296355;
@@ -2887,9 +2890,6 @@ namespace notatnik
 			
 			// aapt resource value: 0x7f09008d
 			public const int textInputEditText1 = 2131296397;
-			
-			// aapt resource value: 0x7f09008f
-			public const int textInputEditText2 = 2131296399;
 			
 			// aapt resource value: 0x7f09006a
 			public const int textSpacerNoButtons = 2131296362;

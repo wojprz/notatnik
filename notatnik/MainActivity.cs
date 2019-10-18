@@ -6,6 +6,7 @@ using Android.Widget;
 using Android.Views;
 using Xamarin.Essentials;
 using notatnik.moduls;
+using System.Security.Cryptography;
 
 namespace notatnik
 {
@@ -25,16 +26,26 @@ namespace notatnik
             Button button = (Button)v;
             var password = FindViewById<EditText>(Resource.Id.textView1).Text;
             IEncrypter encrypter = new Encrypter();
+            IStringCipher stringCipher = new StringCipher();
 
             string salt = await SecureStorage.GetAsync("salt");
             string hash = encrypter.GetHash(password, salt);
-            if (button.Pressed && await SecureStorage.GetAsync("hash") == hash)
+            if (button.Pressed && await SecureStorage.GetAsync("hash") == hash && await SecureStorage.GetAsync("secret") != null)
             {
-                    SetContentView(Resource.Layout.activity_after_password);
+                SetContentView(Resource.Layout.activity_after_password);
+                var secret = await SecureStorage.GetAsync("secret");
+                string key = await SecureStorage.GetAsync("key");
+                secret = stringCipher.Decrypt(secret, key);
+                FindViewById<EditText>(Resource.Id.textView1).Text = secret;
             }
-            else
+            else if(button.Pressed && await SecureStorage.GetAsync("hash") != hash)
             {
+                SetContentView(Resource.Layout.activity_main);
                 FindViewById<EditText>(Resource.Id.textView1).Hint = "Złe hasło";
+            }
+            else if(button.Pressed && await SecureStorage.GetAsync("hash") == hash && await SecureStorage.GetAsync("secret") == null)
+            {
+                SetContentView(Resource.Layout.activity_after_password);
             }
         }
 
@@ -56,16 +67,17 @@ namespace notatnik
         {
             
             IEncrypter encrypter = new Encrypter();
-            var password = FindViewById<EditText>(Resource.Id.textInputEditText2).Text;
-            if (password == string.Empty)
+            Button button = (Button)v;
+            var password = FindViewById<EditText>(Resource.Id.textView1).Text;
+            if (button.Pressed && password == string.Empty)
             {
                 SetContentView(Resource.Layout.activity_main);
-                FindViewById<EditText>(Resource.Id.textInputEditText2).Hint = "Puste";
+                FindViewById<EditText>(Resource.Id.textView1).Hint = "Hasło nie może być puste!";
             }
-            else if(SecureStorage.GetAsync("hash") == null)
+            else if(button.Pressed && SecureStorage.GetAsync("hash") == null)
             {
                 SetContentView(Resource.Layout.activity_main);
-                FindViewById<EditText>(Resource.Id.textInputEditText2).Hint = "Istnieje";
+                FindViewById<EditText>(Resource.Id.textView1).Hint = "Konto już istnieje";
             }
             else
             {
@@ -73,6 +85,10 @@ namespace notatnik
                 string hash = encrypter.GetHash(password, salt);
                 await SecureStorage.SetAsync("hash", hash);
                 await SecureStorage.SetAsync("salt", salt);
+                SymmetricAlgorithm sym = new RijndaelManaged();
+                sym.GenerateKey();
+                string key = sym.Key.ToString();
+                await SecureStorage.SetAsync("key", key);
                 SetContentView(Resource.Layout.activity_main);
             }
         }
@@ -80,6 +96,14 @@ namespace notatnik
         public void PowButton(View v)
         {
             SetContentView(Resource.Layout.activity_main);
+        }
+        [Java.Interop.Export("ZapButton")]
+        async public void ZapButton(View v)
+        {
+            IStringCipher stringCipher = new StringCipher();
+            string key = await SecureStorage.GetAsync("key");
+            string secret = stringCipher.Encrypt(FindViewById<EditText>(Resource.Id.textView1).Text, key);
+            await SecureStorage.SetAsync("secret", secret);
         }
     }
 }
