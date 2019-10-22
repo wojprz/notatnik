@@ -59,10 +59,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MainActivity.cs" />
-    <Compile Include="moduls\Encrypter.cs" />
-    <Compile Include="moduls\IEncrypter.cs" />
-    <Compile Include="moduls\IStringCipher.cs" />
-    <Compile Include="moduls\StringCipher.cs" />
+    <Compile Include="modules\Encrypter.cs" />
+    <Compile Include="modules\IEncrypter.cs" />
+    <Compile Include="modules\IStringCipher.cs" />
+    <Compile Include="modules\StringCipher.cs" />
     <Compile Include="Resources\Resource.designer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

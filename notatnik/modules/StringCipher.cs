@@ -11,7 +11,7 @@ using System.Security.Cryptography;
 using System.IO;
 using System.Linq;
 
-namespace notatnik.moduls
+namespace notatnik.modules
 {
     public class StringCipher : IStringCipher
     {

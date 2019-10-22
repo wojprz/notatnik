@@ -5,7 +5,7 @@ using Android.Runtime;
 using Android.Widget;
 using Android.Views;
 using Xamarin.Essentials;
-using notatnik.moduls;
+using notatnik.modules;
 using System.Security.Cryptography;
 
 namespace notatnik
@@ -14,6 +14,7 @@ namespace notatnik
     [Activity(Label = "@string/app_name", Theme = "@style/AppTheme", MainLauncher = true)]
     public class MainActivity : Activity
     {
+        public static int w;
         protected override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
@@ -27,10 +28,53 @@ namespace notatnik
             var password = FindViewById<EditText>(Resource.Id.textView1).Text;
             IEncrypter encrypter = new Encrypter();
             IStringCipher stringCipher = new StringCipher();
+            var ww = await SecureStorage.GetAsync("hash");
+            if(string.IsNullOrWhiteSpace(ww))
+            {
+                w = 0;
+            }
+            else
+            {
+                w = 1;
+            }
 
-            string salt = await SecureStorage.GetAsync("salt");
-            string hash = encrypter.GetHash(password, salt);
-            if (button.Pressed && await SecureStorage.GetAsync("hash") == hash && await SecureStorage.GetAsync("secret") != null)
+            string salt;
+            string hash;
+            if (password != string.Empty & w == 0)
+            {
+                salt = encrypter.GetSalt(password);
+                hash = encrypter.GetHash(password, salt);
+            }
+            else if(password == string.Empty)
+            {
+                salt = string.Empty;
+                hash = string.Empty;
+            }
+            else
+            {
+                string salt2 = await SecureStorage.GetAsync("salt");
+                hash = encrypter.GetHash(password, salt2);
+            }
+          
+            if (w == 0 & password == string.Empty)
+            {
+                SetContentView(Resource.Layout.activity_main);
+                FindViewById<EditText>(Resource.Id.textView1).Hint = "Hasło nie może być puste!";
+            }
+            else if(w == 0 & password != string.Empty)
+            {
+                salt = encrypter.GetSalt(password);
+                hash = encrypter.GetHash(password, salt);
+                await SecureStorage.SetAsync("hash", hash);
+                await SecureStorage.SetAsync("salt", salt);
+                SymmetricAlgorithm sym = new RijndaelManaged();
+                sym.GenerateKey();
+                string key = sym.Key.ToString();
+                await SecureStorage.SetAsync("key", key);
+                //w++;
+                SetContentView(Resource.Layout.activity_after_password);
+            }
+            else if(w == 1 & hash == await SecureStorage.GetAsync("hash") & await SecureStorage.GetAsync("secret") != null)
             {
                 SetContentView(Resource.Layout.activity_after_password);
                 var secret = await SecureStorage.GetAsync("secret");
@@ -38,14 +82,19 @@ namespace notatnik
                 secret = stringCipher.Decrypt(secret, key);
                 FindViewById<EditText>(Resource.Id.textView1).Text = secret;
             }
-            else if(button.Pressed && await SecureStorage.GetAsync("hash") != hash)
+            else if(w == 1 & hash != await SecureStorage.GetAsync("hash"))
             {
                 SetContentView(Resource.Layout.activity_main);
-                FindViewById<EditText>(Resource.Id.textView1).Hint = "Złe hasło";
+                FindViewById<EditText>(Resource.Id.textView1).Hint = "Złe hasło!";
             }
-            else if(button.Pressed && await SecureStorage.GetAsync("hash") == hash && await SecureStorage.GetAsync("secret") == null)
+            else if(w == 1 & hash == string.Empty)
             {
-                SetContentView(Resource.Layout.activity_after_password);
+                SetContentView(Resource.Layout.activity_main);
+                FindViewById<EditText>(Resource.Id.textView1).Hint = "Hasło nie może być puste!";
+            }
+            else if(w == 1 & hash == await SecureStorage.GetAsync("hash"))
+            {
+                  SetContentView(Resource.Layout.activity_after_password);
             }
         }
 
@@ -53,45 +102,22 @@ namespace notatnik
         async public void ZmiButton(View v)
         {
             IEncrypter encrypter = new Encrypter();
-
-            var password = FindViewById<EditText>(Resource.Id.textInputEditText1).Text;
-            string salt = encrypter.GetSalt(password);
-            string hash = encrypter.GetHash(password, salt);
-            await SecureStorage.SetAsync("hash", hash);
-            await SecureStorage.SetAsync("salt", salt);
-            SetContentView(Resource.Layout.activity_after_password);
-        }
-
-        [Java.Interop.Export("StwButton")]
-        async public void StwButton(View v)
-        {
-            
-            IEncrypter encrypter = new Encrypter();
-            Button button = (Button)v;
-            var password = FindViewById<EditText>(Resource.Id.textView1).Text;
-            if (button.Pressed && password == string.Empty)
+            if (FindViewById<EditText>(Resource.Id.textInputEditText1).Text != string.Empty)
             {
-                SetContentView(Resource.Layout.activity_main);
-                FindViewById<EditText>(Resource.Id.textView1).Hint = "Hasło nie może być puste!";
-            }
-            else if(button.Pressed && SecureStorage.GetAsync("hash") == null)
-            {
-                SetContentView(Resource.Layout.activity_main);
-                FindViewById<EditText>(Resource.Id.textView1).Hint = "Konto już istnieje";
-            }
-            else
-            {
+                var password = FindViewById<EditText>(Resource.Id.textInputEditText1).Text;
                 string salt = encrypter.GetSalt(password);
                 string hash = encrypter.GetHash(password, salt);
                 await SecureStorage.SetAsync("hash", hash);
                 await SecureStorage.SetAsync("salt", salt);
-                SymmetricAlgorithm sym = new RijndaelManaged();
-                sym.GenerateKey();
-                string key = sym.Key.ToString();
-                await SecureStorage.SetAsync("key", key);
-                SetContentView(Resource.Layout.activity_main);
+                SetContentView(Resource.Layout.activity_after_password);
+            }
+            else
+            {
+                SetContentView(Resource.Layout.activity_after_password);
+                FindViewById<EditText>(Resource.Id.textInputEditText1).Hint = "Nowe hasło nie może być puste!";
             }
         }
+
         [Java.Interop.Export("PowButton")]
         public void PowButton(View v)
         {

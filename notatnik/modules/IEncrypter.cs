@@ -10,7 +10,7 @@ using Android.Runtime;
 using Android.Views;
 using Android.Widget;
 
-namespace notatnik.moduls
+namespace notatnik.modules
 {
     public interface IEncrypter
     {
